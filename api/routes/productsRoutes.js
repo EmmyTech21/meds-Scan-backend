@@ -23,10 +23,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Search product by IPR (POST request with request body)
-router.post('/scan/productIPR', async (req, res) => {
-  const { issn } = req.body;
+// Search product by IPR (GET request with query parameter)
+router.get('/scan/productIPR', async (req, res) => {
+  // Retrieve `issn` from query parameters
+  const { issn } = req.query;
   console.log('Received ISSN:', issn);
+  
   try {
     const product = await Product.findOne({ 'productInformation.issn': issn });
     if (product) {
@@ -39,6 +41,7 @@ router.post('/scan/productIPR', async (req, res) => {
     res.status(500).send({ message: 'Internal Server Error', error });
   }
 });
+
 
 // Update a product
 router.patch('/:id', async (req, res) => {
