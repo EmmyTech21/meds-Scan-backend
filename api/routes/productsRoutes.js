@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Product'); // Ensure the path is correct
+const Product = require('../models/Product'); 
 
 // Create a new product
 router.post('/create', async (req, res) => {
@@ -23,9 +23,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Search product by IPR (assuming IPR is ISSN in product information)
-router.post('/scan/productIPR', async (req, res) => {
-  const { issn } = req.body;
+// Search product by IPR (GET request with query parameter)
+router.get('/scan/productIPR', async (req, res) => {
+  const { issn } = req.query;
   console.log('Received ISSN:', issn);
   try {
     const product = await Product.findOne({ 'productInformation.issn': issn });
