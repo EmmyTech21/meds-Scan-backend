@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Product'); // Fixed the path
+const Product = require('../models/Product'); // Ensure the path is correct
 
 // Create a new product
 router.post('/create', async (req, res) => {
@@ -26,6 +26,7 @@ router.get('/', async (req, res) => {
 // Search product by IPR (assuming IPR is ISSN in product information)
 router.post('/scan/productIPR', async (req, res) => {
   const { issn } = req.body;
+  console.log('Received ISSN:', issn);
   try {
     const product = await Product.findOne({ 'productInformation.issn': issn });
     if (product) {
@@ -34,7 +35,8 @@ router.post('/scan/productIPR', async (req, res) => {
       res.status(404).send({ message: 'Product not found' });
     }
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error during product search:', error);
+    res.status(500).send({ message: 'Internal Server Error', error });
   }
 });
 
