@@ -23,9 +23,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Search product by IPR (GET request with query parameter)
-router.get('/scan/productIPR', async (req, res) => {
-  const { issn } = req.query;
+// Search product by IPR (POST request with request body)
+router.post('/scan/productIPR', async (req, res) => {
+  const { issn } = req.body;
   console.log('Received ISSN:', issn);
   try {
     const product = await Product.findOne({ 'productInformation.issn': issn });
