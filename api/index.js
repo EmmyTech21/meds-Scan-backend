@@ -7,9 +7,9 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(express.json()); // Use built-in middleware for JSON parsing
+app.use(express.json());
 app.use(cors({
-  origin: '*', // Adjust the origin as needed for security
+  origin: '*',
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
 }));
@@ -32,6 +32,7 @@ db.once('open', () => {
 
 // Define Routes
 app.use('/api/products', require('./routes/productsRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes')); 
 
 // Root route for health check
 app.get('/', (req, res) => {
