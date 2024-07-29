@@ -61,10 +61,12 @@ router.post('/', async (req, res) => {
       transporter.sendMail(adminMailOptions),
     ]);
 
-    res.status(200).send('Report received and emails sent');
+    // Send JSON response
+    res.status(200).json({ message: 'Report received and emails sent' });
   } catch (error) {
     console.error('Error during report submission:', error);
-    res.status(500).send('Internal Server Error: ' + error.message);
+    // Send JSON error response
+    res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 });
 
@@ -72,10 +74,10 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const reports = await Report.find();
-    res.status(200).send(reports);
+    res.status(200).json(reports);
   } catch (error) {
     console.error('Error fetching reports:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
