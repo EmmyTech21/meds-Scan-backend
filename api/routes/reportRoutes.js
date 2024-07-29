@@ -4,6 +4,7 @@ const Report = require('../models/Report');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config(); 
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
@@ -14,17 +15,24 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
 // Create a new report
 router.post('/', async (req, res) => {
   const { name, email, phoneNumber, message, image } = req.body;
 
   try {
-    let imagePath;
+    let imageName = null;
+
     if (image) {
       // Decode base64 image
       const buffer = Buffer.from(image, 'base64');
-      const imageName = `${Date.now()}.jpg`;
-      imagePath = path.join(__dirname, '..', 'uploads', imageName);
+      imageName = `${Date.now()}.jpg`;
+      const imagePath = path.join(uploadsDir, imageName);
 
       // Save image to the server
       fs.writeFileSync(imagePath, buffer);
@@ -43,7 +51,7 @@ router.post('/', async (req, res) => {
 
     const adminMailOptions = {
       from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL, // Your email address
+      to: process.env.ADMIN_EMAIL,
       subject: 'New Fake Product Report Submitted',
       text: `A new fake product report has been submitted:\n\nName: ${name}\nEmail: ${email}\nPhone Number: ${phoneNumber}\nMessage: ${message}\n\nBest regards,\nYour Application`,
     };
