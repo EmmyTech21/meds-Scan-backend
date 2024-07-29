@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const Report = require('../models/Report'); 
+const Report = require('../models/Report');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
@@ -17,7 +19,18 @@ router.post('/', async (req, res) => {
   const { name, email, phoneNumber, message, image } = req.body;
 
   try {
-    const newReport = new Report({ name, email, phoneNumber, message, image });
+    let imagePath;
+    if (image) {
+      // Decode base64 image
+      const buffer = Buffer.from(image, 'base64');
+      const imageName = `${Date.now()}.jpg`;
+      imagePath = path.join(__dirname, '..', 'uploads', imageName);
+
+      // Save image to the server
+      fs.writeFileSync(imagePath, buffer);
+    }
+
+    const newReport = new Report({ name, email, phoneNumber, message, image: imageName });
     await newReport.save();
 
     // Send email notification to the user
@@ -43,7 +56,7 @@ router.post('/', async (req, res) => {
     res.status(200).send('Report received and emails sent');
   } catch (error) {
     console.error('Error during report submission:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).send('Internal Server Error: ' + error.message);
   }
 });
 
