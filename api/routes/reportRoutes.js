@@ -28,16 +28,6 @@ router.post('/', async (req, res) => {
       text: `Hello ${name},\n\nThank you for reporting a fake product. We have received your report and will take appropriate action.\n\nBest regards,\nMedScan Team`,
     };
 
-    transporter.sendMail(userMailOptions, (error, info) => {
-      if (error) {
-        console.log(error);
-        return res.status(500).send('Error sending email to user');
-      } else {
-        console.log('User email sent: ' + info.response);
-      }
-    });
-
-    // Send email notification to yourself
     const adminMailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.ADMIN_EMAIL, // Your email address
@@ -45,21 +35,17 @@ router.post('/', async (req, res) => {
       text: `A new fake product report has been submitted:\n\nName: ${name}\nEmail: ${email}\nPhone Number: ${phoneNumber}\nMessage: ${message}\n\nBest regards,\nYour Application`,
     };
 
-    transporter.sendMail(adminMailOptions, (error, info) => {
-      if (error) {
-        console.log(error);
-        return res.status(500).send('Error sending email to admin');
-      } else {
-        console.log('Admin email sent: ' + info.response);
-        res.status(200).send('Report received and emails sent');
-      }
-    });
+    await Promise.all([
+      transporter.sendMail(userMailOptions),
+      transporter.sendMail(adminMailOptions),
+    ]);
 
+    res.status(200).send('Report received and emails sent');
   } catch (error) {
-    res.status(400).send(error);
+    console.error('Error during report submission:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
-
 
 // Get all reports
 router.get('/', async (req, res) => {
@@ -67,7 +53,8 @@ router.get('/', async (req, res) => {
     const reports = await Report.find();
     res.status(200).send(reports);
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Error fetching reports:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
