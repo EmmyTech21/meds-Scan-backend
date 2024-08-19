@@ -1,0 +1,47 @@
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: /path/to/orderer/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererOrg.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererOrg.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererOrg.admin')"
+
+Orderer:
+  OrdererType: solo
+  Addresses:
+    - orderer.example.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  ChannelRestrictions:
+    MaxChannels: 0
+  Organizations:
+    - *OrdererOrg
+
+Profiles:
+  OrdererGenesis:
+    Orderer:
+      OrdererType: solo
+      Addresses:
+        - orderer.example.com:7050
+      BatchTimeout: 2s
+      BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+      ChannelRestrictions:
+        MaxChannels: 0
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+          - *OrdererOrg

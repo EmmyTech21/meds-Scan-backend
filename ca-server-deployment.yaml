@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ca-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ca-server
+  template:
+    metadata:
+      labels:
+        app: ca-server
+    spec:
+      containers:
+      - name: ca-server
+        image: hyperledger/fabric-ca:latest
+        ports:
+        - containerPort: 7054
+        env:
+        - name: FABRIC_CA_HOME
+          value: /etc/hyperledger/fabric-ca-server
+        - name: FABRIC_CA_SERVER_CA_NAME
+          value: ca-org1
+        - name: FABRIC_CA_SERVER_TLS_ENABLED
+          value: "true"
+        volumeMounts:
+        - mountPath: /etc/hyperledger/fabric-ca-server
+          name: ca-server-volume
+      volumes:
+      - name: ca-server-volume
+        emptyDir: {}

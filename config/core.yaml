@@ -1,0 +1,70 @@
+peer:
+  id: peer0.org1.example.com
+  networkId: dev
+  address: peer0.org1.example.com:7051
+  listenAddress: 0.0.0.0:7051
+  chaincodeListenAddress: 0.0.0.0:7052
+
+tls:
+  enabled: true
+  cert:
+    file: /etc/hyperledger/fabric/tls/server.crt
+  key:
+    file: /etc/hyperledger/fabric/tls/server.key
+  rootcert:
+    file: /etc/hyperledger/fabric/tls/ca.crt
+
+bccsp:
+  default: SW
+  sw:
+    hash: SHA2
+    security: 256
+    filekeystore:
+      keystore: /Users/newowner/Desktop/meds-Scan-backend/fabric-samples/config/msp/keystore
+
+ledger:
+  state:
+    snapshots:
+      rootdir: /var/hyperledger/production/ledgersData/snapshots
+
+admin:
+  listenAddress: 127.0.0.1:9444
+
+msp:
+  networkid: dev
+  profile:
+    enabled: false
+    listenaddress: 0.0.0.0:6060
+  tls:
+    cert:
+      file: tls/server.crt
+    clientauthrequired: false
+    clientrootcas:
+      files:
+      - tls/ca.crt
+    enabled: false
+    key:
+      file: tls/server.key
+    rootcert:
+      file: tls/ca.crt
+
+vm:
+  docker:
+    attachstdout: false
+    hostconfig:
+      logconfig:
+        config:
+          max-file: "5"
+          max-size: 50m
+        type: json-file
+      memory: 2147483648
+      networkmode: host
+    tls:
+      ca:
+        file: docker/ca.crt
+      cert:
+        file: docker/tls.crt
+      enabled: false
+      key:
+        file: docker/tls.key
+  endpoint: unix:///var/run/docker.sock

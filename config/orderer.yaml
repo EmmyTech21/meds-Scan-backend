@@ -1,0 +1,12 @@
+# orderer.yaml
+General:
+  ListenAddress: 0.0.0.0
+  ListenPort: 7050
+  TLS:
+    Enabled: true
+    PrivateKey: /etc/hyperledger/fabric/tls/server.key
+    Certificate: /etc/hyperledger/fabric/tls/server.crt
+    RootCAs:
+      - /etc/hyperledger/fabric/tls/ca.crt
+  LocalMSPDir: /etc/hyperledger/fabric/msp
+  LocalMSPID: OrdererMSP
