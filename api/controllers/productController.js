@@ -2,7 +2,7 @@ const Product = require('../models/productsModel');
 
 exports.createProduct = async (req, res) => {
   try {
-    // Extract userId from req.user or req.body
+    
     const userId = req.user?.id || req.body.userId;
 
     if (!userId) {
@@ -10,14 +10,14 @@ exports.createProduct = async (req, res) => {
       return res.status(400).send({ message: 'User ID is missing' });
     }
 
-    // Log the userId to verify its value
+  
     console.log('userId:', userId);
 
-    // Extract product information from req.body
+  
     const { manufacturerInformation, productInformation, packageInformation } = req.body;
     const { productName, productCategory, productDescription, issn } = productInformation;
 
-    // Ensure required fields are present in req.body
+ 
     if (!productName || !productCategory || !productDescription || !issn) {
       console.error('Missing required fields');
       return res.status(400).send({ message: 'Missing required fields' });
@@ -32,7 +32,7 @@ exports.createProduct = async (req, res) => {
 
     await newProduct.save();
 
-    // Mock blockchain address generation
+  
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
     res.status(201).send({ message: 'Product created successfully', blockchainAddress });
@@ -41,9 +41,6 @@ exports.createProduct = async (req, res) => {
     res.status(400).send({ message: 'Failed to create product', error: error.message });
   }
 };
-
-
-// Other controller methods...
 
 exports.getAllProducts = async (req, res) => {
   const userId = req.user?.id || req.query.userId;
@@ -92,7 +89,7 @@ exports.updateProduct = async (req, res) => {
 
   try {
     const product = await Product.findOneAndUpdate(
-      { _id: productId, userId },  // Ensure the product belongs to the user
+      { _id: productId, userId },  
       { productName, productCategory, productDescription, issn },
       { new: true }
     );

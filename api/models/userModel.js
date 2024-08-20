@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
     required: true, 
     validate: {
       validator: function(v) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); // Basic email format validation
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); 
       },
       message: props => `${props.value} is not a valid email address!`
     }
@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
   password: { 
     type: String, 
     required: true, 
-    minlength: 6 // Ensure password is at least 6 characters long
+    minlength: 6 
   },
   role: { 
     type: String, 
@@ -29,7 +29,6 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Hash the password before saving the user
 userSchema.pre('save', async function(next) {
   if (this.isModified('password') || this.isNew) {
     try {
@@ -43,7 +42,7 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Method to compare password for authentication
+
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

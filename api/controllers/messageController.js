@@ -1,6 +1,5 @@
 const Message = require('../models/Message'); 
 
-// Controller for sending a message
 exports.sendMessage = async (req, res) => {
   try {
     const { senderId, receiverId, content } = req.body;
@@ -19,7 +18,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// Controller for retrieving messages
+
 exports.getMessages = async (req, res) => {
   try {
     const { senderId, receiverId } = req.params;
@@ -28,7 +27,7 @@ exports.getMessages = async (req, res) => {
       return res.status(400).json({ error: 'senderId and receiverId are required' });
     }
 
-    // Fetching messages between two users
+   
     const messages = await Message.find({
       $or: [
         { senderId, receiverId },
@@ -43,17 +42,17 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-// Controller for updating a message
+
 exports.updateMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
     const { content } = req.body;
 
-    // Update the message content
+    
     const updatedMessage = await Message.findByIdAndUpdate(
       messageId,
       { content },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedMessage) {
@@ -67,12 +66,12 @@ exports.updateMessage = async (req, res) => {
   }
 };
 
-// Controller for deleting a message
+
 exports.deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
 
-    // Delete the message by ID
+   
     const deletedMessage = await Message.findByIdAndDelete(messageId);
 
     if (!deletedMessage) {

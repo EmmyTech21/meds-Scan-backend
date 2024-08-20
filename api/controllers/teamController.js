@@ -1,13 +1,13 @@
 const TeamMember = require('../models/teamMember');
 
-// Add a team member
+
 exports.addTeamMember = async (req, res) => {
   try {
-    const userId = req.user.userId; // Ensure this matches the key used in your middleware
+    const userId = req.user.userId; 
     const { name, email, phone, position } = req.body;
 
     const newTeamMember = new TeamMember({
-      userId, // Attach userId here
+      userId, 
       name,
       email,
       phone,
@@ -22,10 +22,9 @@ exports.addTeamMember = async (req, res) => {
   }
 };
 
-// Get all team members for the authenticated user
 exports.getTeamMembers = async (req, res) => {
   try {
-    const userId = req.user.userId; // Ensure this matches the key used in your middleware
+    const userId = req.user.userId; 
     const members = await TeamMember.find({ userId });
     res.json(members);
   } catch (error) {
@@ -34,11 +33,10 @@ exports.getTeamMembers = async (req, res) => {
   }
 };
 
-// Delete a team member
 exports.deleteTeamMember = async (req, res) => {
   try {
-    const teamMemberId = req.params.id; // Use 'id' from route parameters
-    const userId = req.user.userId; // Ensure this matches the key used in your middleware
+    const teamMemberId = req.params.id; 
+    const userId = req.user.userId; 
 
     const member = await TeamMember.findOneAndDelete({ _id: teamMemberId, userId });
     

@@ -6,15 +6,15 @@ const manufacturerSchema = new mongoose.Schema({
   email: String,
   phoneNumber: String,
   productCategory: String,
-  topProducts: [{ productName: String, sales: Number }], // Array of top products
+  topProducts: [{ productName: String, sales: Number }], 
   marketShare: {
     pot1: Number,
     pot2: Number,
     pot3: Number,
     pot4: Number,
-  }, // Object for market share
-  salesTrend: [{ day: String, sales: Number }], // Array for sales trend
-  regions: [{ name: String, sales: Number }], // Array for regional distribution data
+  }, 
+  salesTrend: [{ day: String, sales: Number }], 
+  regions: [{ name: String, sales: Number }], 
   userId: mongoose.Schema.Types.ObjectId,
 });
 

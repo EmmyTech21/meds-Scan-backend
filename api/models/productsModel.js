@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const manufacturerSchema = new mongoose.Schema({
-  manufacturerName: String,  // Include manufacturerName in the schema
+  manufacturerName: String, 
   contactPerson: String,
   emailAddress: String,
   phoneNumber: String,
-  manufacturedDate: Date,   // Add manufacturedDate, expiryDate, batchNumber, nafdacRegistration
+  manufacturedDate: Date,  
   expiryDate: Date,
   batchNumber: String,
   nafdacRegistration: String,
