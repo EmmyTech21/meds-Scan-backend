@@ -36,6 +36,11 @@ mongoose.connect(process.env.DATABASE)
     process.exit(1);
   });
 
+// Set up a route to show API status
+app.get('/', (req, res) => {
+  res.send('API is working');
+});
+
 // Set up routes
 app.use('/api/products', productRoutes);
 app.use('/api/reports', reportRoutes);
