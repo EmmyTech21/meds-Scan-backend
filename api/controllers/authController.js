@@ -8,7 +8,7 @@ const generateToken = (userId) => {
 
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, phoneNumber, birthDate, country, password } = req.body;
+    const { fullName, email, phoneNumber, companyName,birthDate, country, password } = req.body;
 
     
     const existingUser = await User.findOne({ email });
@@ -21,6 +21,7 @@ exports.register = async (req, res) => {
       fullName,
       email,
       phoneNumber,
+      companyName,
       birthDate,
       country,
       password, 
