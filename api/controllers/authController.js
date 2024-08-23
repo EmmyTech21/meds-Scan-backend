@@ -5,30 +5,42 @@ const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
-
+// Register new user
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, phoneNumber, birthDate, country, password } = req.body;
+    const { 
+      fullName, email, phoneNumber, country, password, 
+      role, businessName, businessLocation, 
+      businessRegistrationNumber, taxIdentificationNumber, 
+      govtIdImage, cacCertImage 
+    } = req.body;
 
-    
+    // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-   
+    // Create a new user
     const newUser = new User({
       fullName,
       email,
       phoneNumber,
-      birthDate,
       country,
       password, 
+      role,
+      businessName,
+      businessLocation,
+      businessRegistrationNumber,
+      taxIdentificationNumber,
+      govtIdImage,
+      cacCertImage
     });
 
+    // Save the user
     await newUser.save();
 
-    
+    // Generate a JWT token
     const token = generateToken(newUser._id);
 
     res.status(201).json({ message: 'Account created successfully', token });
@@ -38,7 +50,7 @@ exports.register = async (req, res) => {
   }
 };
 
-
+// Login user
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -52,7 +64,6 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-   
     const token = generateToken(user._id);
 
     res.status(200).json({ token, userId: user._id, message: 'Login successful' });
@@ -62,6 +73,7 @@ exports.login = async (req, res) => {
   }
 };
 
+// Get user profile
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
@@ -75,14 +87,24 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-
+// Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { fullName, email, country, role } = req.body;
+    const { 
+      fullName, email, country, role, 
+      businessName, businessLocation, 
+      businessRegistrationNumber, taxIdentificationNumber, 
+      govtIdImage, cacCertImage 
+    } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,
-      { fullName, email, country, role }, 
+      { 
+        fullName, email, country, role, 
+        businessName, businessLocation, 
+        businessRegistrationNumber, taxIdentificationNumber, 
+        govtIdImage, cacCertImage 
+      },
       { new: true } 
     ).select('-password');
 
@@ -97,7 +119,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-
+// Delete user profile
 exports.deleteProfile = async (req, res) => {
   try {
     const deletedUser = await User.findByIdAndDelete(req.user.userId);
