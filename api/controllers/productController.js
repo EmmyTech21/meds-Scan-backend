@@ -18,13 +18,11 @@ exports.createProduct = async (req, res) => {
       return res.status(400).send({ message: 'Missing required fields' });
     }
 
-    // Generate unique codes for each product in the package
-    const productCodes = [];
-    for (let i = 0; i < packageInformation.quantityPerPackage; i++) {
-      const uniqueCode = crypto.randomBytes(8).toString('hex');
-      productCodes.push(uniqueCode);
-    }
-    packageInformation.productCodes = productCodes;
+    // Calculate the ProductCode by multiplying productsPerPackage by howManyPackage
+    const productCode = packageInformation.productsPerPackage * packageInformation.howManyPackage;
+
+    // Convert the productCode to a string and store it in an array
+    packageInformation.productCodes = [productCode.toString()];
 
     const newProduct = new Product({
       manufacturerInformation,
@@ -51,7 +49,7 @@ exports.getAllProducts = async (req, res) => {
   }
 
   try {
-    const products = await Product.find({ userId });  // Filter by user ID
+    const products = await Product.find({ userId });
     res.status(200).json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -95,7 +93,7 @@ exports.updateProduct = async (req, res) => {
 
   try {
     const product = await Product.findOneAndUpdate(
-      { _id: productId, userId },  
+      { _id: productId, userId },
       { productName, productCategory, productDescription, issn },
       { new: true }
     );
