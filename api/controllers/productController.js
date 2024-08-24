@@ -18,11 +18,16 @@ exports.createProduct = async (req, res) => {
       return res.status(400).send({ message: 'Missing required fields' });
     }
 
-    // Calculate the ProductCode by multiplying productsPerPackage by howManyPackage
-    const productCode = packageInformation.productsPerPackage * packageInformation.howManyPackage;
+    // Calculate the number of codes to generate
+    const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
 
-    // Convert the productCode to a string and store it in an array
-    packageInformation.productCodes = [productCode.toString()];
+    // Generate unique codes for each product in the package
+    const productCodes = [];
+    for (let i = 0; i < totalProducts; i++) {
+      const uniqueCode = crypto.randomBytes(8).toString('hex');
+      productCodes.push(uniqueCode);
+    }
+    packageInformation.productCodes = productCodes;
 
     const newProduct = new Product({
       manufacturerInformation,
