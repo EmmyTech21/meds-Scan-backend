@@ -13,7 +13,7 @@ router.post('/create', (req, res, next) => {
 }, productController.createProduct);
 
 router.get('/', productController.getAllProducts);
-router.get('/scan/productIPR', productController.getProductByIssn);
+router.get('/scan/productIPR', productController.getProductByUniqueCode);
 router.patch('/:id', productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
 

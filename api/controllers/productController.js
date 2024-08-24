@@ -1,8 +1,8 @@
 const Product = require('../models/productsModel');
+const crypto = require('crypto');
 
 exports.createProduct = async (req, res) => {
   try {
-    
     const userId = req.user?.id || req.body.userId;
 
     if (!userId) {
@@ -10,29 +10,31 @@ exports.createProduct = async (req, res) => {
       return res.status(400).send({ message: 'User ID is missing' });
     }
 
-  
-    console.log('userId:', userId);
-
-  
     const { manufacturerInformation, productInformation, packageInformation } = req.body;
     const { productName, productCategory, productDescription, issn } = productInformation;
 
- 
     if (!productName || !productCategory || !productDescription || !issn) {
       console.error('Missing required fields');
       return res.status(400).send({ message: 'Missing required fields' });
     }
 
+    // Generate unique codes for each product in the package
+    const productCodes = [];
+    for (let i = 0; i < packageInformation.quantityPerPackage; i++) {
+      const uniqueCode = crypto.randomBytes(8).toString('hex');
+      productCodes.push(uniqueCode);
+    }
+    packageInformation.productCodes = productCodes;
+
     const newProduct = new Product({
       manufacturerInformation,
       productInformation,
       packageInformation,
-      userId,  // Associate the product with the user's ID
+      userId,
     });
 
     await newProduct.save();
 
-  
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
     res.status(201).send({ message: 'Product created successfully', blockchainAddress });
@@ -57,8 +59,8 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-exports.getProductByIssn = async (req, res) => {
-  const { issn } = req.query;
+exports.getProductByUniqueCode = async (req, res) => {
+  const { uniqueCode } = req.query;
   const userId = req.user?.id || req.query.userId;
 
   if (!userId) {
@@ -66,7 +68,11 @@ exports.getProductByIssn = async (req, res) => {
   }
 
   try {
-    const product = await Product.findOne({ 'productInformation.issn': issn, userId });  // Filter by issn and user ID
+    const product = await Product.findOne({
+      'packageInformation.productCodes': uniqueCode,
+      userId,
+    });
+
     if (product) {
       res.status(200).json(product);
     } else {
@@ -98,6 +104,7 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).send({ message: 'Product not found or unauthorized' });
     }
 
+    // Assuming you have a function to interact with a blockchain contract
     const contract = await getContractWithRetry(userId);
     await submitTransactionWithRetry(contract, 'updateProduct', JSON.stringify(product));
 
@@ -117,12 +124,13 @@ exports.deleteProduct = async (req, res) => {
   }
 
   try {
-    const product = await Product.findOneAndDelete({ _id: productId, userId });  // Ensure the product belongs to the user
+    const product = await Product.findOneAndDelete({ _id: productId, userId });
 
     if (!product) {
       return res.status(404).send({ message: 'Product not found or unauthorized' });
     }
 
+    // Assuming you have a function to interact with a blockchain contract
     const contract = await getContractWithRetry(userId);
     await submitTransactionWithRetry(contract, 'deleteProduct', productId);
 

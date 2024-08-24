@@ -19,12 +19,13 @@ const productSchema = new mongoose.Schema({
 });
 
 const packageSchema = new mongoose.Schema({
-  quantityPerPackage: Number, // Updated fields to match the form inputs
+  quantityPerPackage: Number, 
   howManyPackage: Number,
   productsPerPackage: Number,
   currentHumidity: String,
   currentTemperature: String,
   productComponent: String,
+  productCodes: [String], // Array to store unique codes for each product in the package
 });
 
 const productDetailsSchema = new mongoose.Schema({
