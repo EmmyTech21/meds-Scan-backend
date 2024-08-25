@@ -14,7 +14,21 @@ exports.register = async (req, res) => {
       phone,
       password,
       agreeToTerms,
-      role
+      role,
+      businessName,
+      businessLocation,
+      businessRegistrationNumber,
+      cacCertImage,
+      nafdacRegistrationCertificates,
+      manufacturingAddress,
+      corporateOfficeAddress,
+      operationalPermits,
+      distributionCenterAddress,
+      pharmacyRegistrationDocs,
+      storeProfile,
+      ownerOrManager,
+      proofOfOwnership,
+      contactPersons,
     } = req.body;
 
     // Check if the user already exists
@@ -30,7 +44,21 @@ exports.register = async (req, res) => {
       phone,
       password,
       agreeToTerms,
-      role
+      role,
+      businessName,
+      businessLocation,
+      businessRegistrationNumber,
+      cacCertImage,
+      nafdacRegistrationCertificates,
+      manufacturingAddress,
+      corporateOfficeAddress,
+      operationalPermits,
+      distributionCenterAddress,
+      pharmacyRegistrationDocs,
+      storeProfile,
+      ownerOrManager,
+      proofOfOwnership,
+      contactPersons,
     });
 
     // Save the user
@@ -70,6 +98,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Failed to login", error: error.message });
   }
 };
+
 
 // Get user profile
 exports.getProfile = async (req, res) => {
