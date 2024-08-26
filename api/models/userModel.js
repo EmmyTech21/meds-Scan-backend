@@ -33,33 +33,33 @@ const userSchema = new mongoose.Schema({
     default: "distributor",
   },
 
-  // KYC Fields
-  businessName: { type: String, required: true },
-  businessLocation: { type: String, required: true },
-  businessRegistrationNumber: { type: String },
-  cacCertImage: { type: String },
+  // // KYC Fields
+  // businessName: { type: String, required: true },
+  // businessLocation: { type: String, required: true },
+  // businessRegistrationNumber: { type: String },
+  // cacCertImage: { type: String },
 
-  // Manufacturer Specific Fields
-  nafdacRegistrationCertificates: [{ type: String }],
-  manufacturingAddress: { type: String },
-  corporateOfficeAddress: { type: String },
+  // // Manufacturer Specific Fields
+  // nafdacRegistrationCertificates: [{ type: String }],
+  // manufacturingAddress: { type: String },
+  // corporateOfficeAddress: { type: String },
 
-  // Distributor Specific Fields
-  operationalPermits: [{ type: String }],
-  distributionCenterAddress: { type: String },
+  // // Distributor Specific Fields
+  // operationalPermits: [{ type: String }],
+  // distributionCenterAddress: { type: String },
 
-  // Store/Pharmacy Specific Fields
-  pharmacyRegistrationDocs: [{ type: String }],
-  storeProfile: { type: String }, 
-  ownerOrManager: {
-    idDocuments: [{ type: String }],
-    proofOfAddress: { type: String }, 
-    cv: { type: String }, 
-  },
-  proofOfOwnership: { type: String },
+  // // Store/Pharmacy Specific Fields
+  // pharmacyRegistrationDocs: [{ type: String }],
+  // storeProfile: { type: String }, 
+  // ownerOrManager: {
+  //   idDocuments: [{ type: String }],
+  //   proofOfAddress: { type: String }, 
+  //   cv: { type: String }, 
+  // },
+  // proofOfOwnership: { type: String },
 
-  // Common KYC Fields
-  contactPersons: [contactPersonSchema], // Array of contact persons
+  // // Common KYC Fields
+  // contactPersons: [contactPersonSchema], // Array of contact persons
 
   // Timestamps
   createdAt: { type: Date, default: Date.now },
