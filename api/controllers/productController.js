@@ -1,5 +1,8 @@
 const Product = require('../models/productsModel');
 const crypto = require('crypto');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 
 exports.createProduct = async (req, res) => {
   try {
@@ -18,10 +21,8 @@ exports.createProduct = async (req, res) => {
       return res.status(400).send({ message: 'Missing required fields' });
     }
 
-    // Calculate the number of codes to generate
     const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
 
-    // Generate unique codes for each product in the package
     const productCodes = [];
     for (let i = 0; i < totalProducts; i++) {
       const uniqueCode = crypto.randomBytes(8).toString('hex');
@@ -38,14 +39,40 @@ exports.createProduct = async (req, res) => {
 
     await newProduct.save();
 
+    // Ensure the PDFs directory exists
+    const pdfDirectory = path.join(__dirname, '../public/pdfs');
+    if (!fs.existsSync(pdfDirectory)) {
+      fs.mkdirSync(pdfDirectory, { recursive: true });
+    }
+
+    // Generate PDF with the unique codes
+    const pdfFilename = `${newProduct._id}_codes.pdf`;
+    const pdfPath = path.join(pdfDirectory, pdfFilename);
+    const doc = new PDFDocument();
+    doc.pipe(fs.createWriteStream(pdfPath));
+
+    doc.fontSize(12).text('Product Codes:', { underline: true });
+    productCodes.forEach((code, index) => {
+      doc.text(`${index + 1}. ${code}`);
+    });
+
+    doc.end();
+
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
-    res.status(201).send({ message: 'Product created successfully', blockchainAddress });
+    // Return a relative path for the PDF to the client
+    res.status(201).send({ 
+      message: 'Product created successfully', 
+      blockchainAddress, 
+      pdfPath: `pdfs/${pdfFilename}` 
+    });
   } catch (error) {
     console.error('Error creating product:', error);
     res.status(400).send({ message: 'Failed to create product', error: error.message });
   }
 };
+
+
 
 exports.getAllProducts = async (req, res) => {
   const userId = req.user?.id || req.query.userId;
@@ -71,6 +98,7 @@ exports.getProductByUniqueCode = async (req, res) => {
   }
 
   try {
+    // Search for the product where the productCode matches the uniqueCode provided
     const product = await Product.findOne({
       'packageInformation.productCodes': uniqueCode,
       userId,
@@ -86,6 +114,7 @@ exports.getProductByUniqueCode = async (req, res) => {
     res.status(500).send({ message: 'Failed to fetch product', error: error.message });
   }
 };
+
 
 exports.updateProduct = async (req, res) => {
   const productId = req.params.id;
@@ -107,7 +136,7 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).send({ message: 'Product not found or unauthorized' });
     }
 
-    // Assuming you have a function to interact with a blockchain contract
+    
     const contract = await getContractWithRetry(userId);
     await submitTransactionWithRetry(contract, 'updateProduct', JSON.stringify(product));
 
