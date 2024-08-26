@@ -15,20 +15,6 @@ exports.register = async (req, res) => {
       password,
       agreeToTerms,
       role,
-      businessName,
-      businessLocation,
-      businessRegistrationNumber,
-      cacCertImage,
-      nafdacRegistrationCertificates,
-      manufacturingAddress,
-      corporateOfficeAddress,
-      operationalPermits,
-      distributionCenterAddress,
-      pharmacyRegistrationDocs,
-      storeProfile,
-      ownerOrManager,
-      proofOfOwnership,
-      contactPersons,
     } = req.body;
 
     // Check if the user already exists
@@ -45,20 +31,6 @@ exports.register = async (req, res) => {
       password,
       agreeToTerms,
       role,
-      businessName,
-      businessLocation,
-      businessRegistrationNumber,
-      cacCertImage,
-      nafdacRegistrationCertificates,
-      manufacturingAddress,
-      corporateOfficeAddress,
-      operationalPermits,
-      distributionCenterAddress,
-      pharmacyRegistrationDocs,
-      storeProfile,
-      ownerOrManager,
-      proofOfOwnership,
-      contactPersons,
     });
 
     // Save the user
