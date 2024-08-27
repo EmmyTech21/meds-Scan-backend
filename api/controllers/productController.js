@@ -91,7 +91,7 @@ exports.getAllProducts = async (req, res) => {
 
 exports.getProductByUniqueCode = async (req, res) => {
   const { uniqueCode } = req.query;
-  const userId = req.user?.id || req.query.userId;
+  const userId = req.user?.id || req.query.userId || 'defaultUserId'; // Set your default user ID here
 
   if (!userId) {
     return res.status(400).send({ message: 'User ID is required' });
