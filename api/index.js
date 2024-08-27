@@ -19,7 +19,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 // Update CORS configuration to allow requests from your frontend's origin
 app.use(cors({ 
-  origin: 'http://localhost:5173', 
+  origin: ['http://localhost:5173', 'https://meds-scan-backend.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
