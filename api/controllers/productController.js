@@ -73,7 +73,6 @@ exports.createProduct = async (req, res) => {
 };
 
 
-
 exports.getAllProducts = async (req, res) => {
   const userId = req.user?.id || req.query.userId;
   if (!userId) {
