@@ -15,19 +15,12 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
-require('dotenv').config({ path: '/Users/newowner/Desktop/meds-Scan-backend/.env' });
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-// Use CORS middleware
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
+app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
-// Connect to MongoDB
 mongoose.connect(process.env.DATABASE)
   .then(() => console.log('MongoDB connected'))
   .catch((err) => {
@@ -35,7 +28,6 @@ mongoose.connect(process.env.DATABASE)
     process.exit(1);
   });
 
-// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
@@ -48,11 +40,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/manufacturer', manufacturerRoutes);
-app.use('/api/dashboard', dashboardRoutes); // Added dashboard routes
+app.use('/api/dashboard', dashboardRoutes);
 
 const server = http.createServer(app);
-
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

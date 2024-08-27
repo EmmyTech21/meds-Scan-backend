@@ -88,21 +88,23 @@ exports.getAllProducts = async (req, res) => {
     res.status(500).send({ message: 'Failed to fetch products', error: error.message });
   }
 };
-
 exports.getProductByUniqueCode = async (req, res) => {
   const { uniqueCode } = req.query;
   const userId = req.user?.id || req.query.userId;
 
-  if (!userId) {
-    return res.status(400).send({ message: 'User ID is required' });
-  }
-
   try {
-    // Search for the product where the productCode matches the uniqueCode provided
-    const product = await Product.findOne({
+    // Build the query object based on the presence of a valid userId
+    const query = {
       'packageInformation.productCodes': uniqueCode,
-      userId,
-    });
+    };
+
+    // Add userId to the query if it's valid
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      query.userId = userId;
+    }
+
+    // Search for the product based on the uniqueCode (and userId if provided)
+    const product = await Product.findOne(query);
 
     if (product) {
       res.status(200).json(product);
@@ -114,6 +116,7 @@ exports.getProductByUniqueCode = async (req, res) => {
     res.status(500).send({ message: 'Failed to fetch product', error: error.message });
   }
 };
+
 
 
 exports.updateProduct = async (req, res) => {
