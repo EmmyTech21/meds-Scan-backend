@@ -53,6 +53,7 @@ exports.createProduct = async (req, res) => {
 
     await newProduct.save();
 
+    // PDF Directory and Path
     const pdfDirectory = path.join(__dirname, '../public/pdfs');
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true });
@@ -60,14 +61,14 @@ exports.createProduct = async (req, res) => {
 
     const pdfFilename = `${newProduct._id}_codes.pdf`;
     const pdfPath = path.join(pdfDirectory, pdfFilename);
+
+    // Generate PDF
     const doc = new PDFDocument();
     doc.pipe(fs.createWriteStream(pdfPath));
-
     doc.fontSize(12).text('Product Codes:', { underline: true });
     productCodes.forEach((code, index) => {
       doc.text(`${index + 1}. ${code}`);
     });
-
     doc.end();
 
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
@@ -75,14 +76,13 @@ exports.createProduct = async (req, res) => {
     res.status(201).send({
       message: 'Product created successfully',
       blockchainAddress,
-      pdfPath: `pdfs/${pdfFilename}`
+      pdfPath: `pdfs/${pdfFilename}`  // Correct path relative to 'public'
     });
   } catch (error) {
     console.error('Error creating product:', error);
     res.status(500).send({ message: 'Failed to create product', error: error.message });
   }
 };
-
 
 exports.getAllProducts = async (req, res) => {
   const userId = req.user?.id || req.query.userId;
@@ -98,6 +98,7 @@ exports.getAllProducts = async (req, res) => {
     res.status(500).send({ message: 'Failed to fetch products', error: error.message });
   }
 };
+
 exports.getProductByUniqueCode = async (req, res) => {
   const { uniqueCode } = req.query;
   const userId = req.user?.id || req.query.userId;
@@ -124,8 +125,6 @@ exports.getProductByUniqueCode = async (req, res) => {
   }
 };
 
-
-
 exports.updateProduct = async (req, res) => {
   const productId = req.params.id;
   const { productName, productCategory, productDescription, issn } = req.body;
@@ -146,7 +145,7 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).send({ message: 'Product not found or unauthorized' });
     }
 
-    
+    // Assuming you have a function to interact with a blockchain contract
     const contract = await getContractWithRetry(userId);
     await submitTransactionWithRetry(contract, 'updateProduct', JSON.stringify(product));
 

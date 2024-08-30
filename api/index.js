@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
-const pdf = require('pdfkit'); 
 
 const productRoutes = require('./routes/productsRoutes');
 const reportRoutes = require('./routes/reportRoutes');
@@ -20,7 +19,7 @@ const app = express();
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 app.use(cors({ 
-  origin: ['http://localhost:5173', 'https://your-frontend.vercel.app'], 
+  origin: ['http://localhost:5173', 'https://meds-scan-backend.vercel.app/'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
@@ -48,21 +47,6 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/manufacturer', manufacturerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-
-// Example route for PDF generation
-app.post('/api/products/create', async (req, res) => {
-  const productData = req.body;
-
-  // Generate PDF
-  const doc = new pdf();
-  const pdfPath = `./public/pdfs/${Date.now()}_codes.pdf`;
-  doc.pipe(fs.createWriteStream(pdfPath));
-  doc.text(JSON.stringify(productData, null, 2));
-  doc.end();
-
-  
-  res.status(201).json({ message: 'Product created', pdfPath: pdfPath.replace('./public', '') });
-});
 
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
