@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
       password,
       agreeToTerms,
       role,
-      ...kycData // Extract KYC data separately
+      ...kycData
     } = req.body;
 
     // Check if the user already exists
@@ -38,18 +38,12 @@ exports.register = async (req, res) => {
     // Save the user
     await newUser.save();
 
-    // If role requires KYC data, validate and create KYC entry
-    if (role !== "user") {
-      // Perform additional validation on KYC fields if needed
-      if (!kycData.businessName || !kycData.businessLocation) {
-        return res.status(400).json({
-          message: "KYC validation failed: businessName and businessLocation are required.",
-        });
-      }
-
+    // If role requires KYC data, create KYC entry
+    if (role !== "user" && Object.keys(kycData).length > 0) {
+      // Only include KYC data if it's provided
       const kyc = new KYC({
         userId: newUser._id,
-        ...kycData,
+        ...kycData
       });
       await kyc.save();
     }
@@ -63,6 +57,7 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Login user
 exports.login = async (req, res) => {
