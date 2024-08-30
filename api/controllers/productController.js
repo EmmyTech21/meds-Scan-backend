@@ -14,20 +14,34 @@ exports.createProduct = async (req, res) => {
     }
 
     const { manufacturerInformation, productInformation, packageInformation } = req.body;
-    const { productName, productCategory, productDescription, issn } = productInformation;
 
-    if (!productName || !productCategory || !productDescription || !issn) {
-      console.error('Missing required fields');
-      return res.status(400).send({ message: 'Missing required fields' });
+    // Validate required fields
+    if (!manufacturerInformation || !productInformation || !packageInformation) {
+      return res.status(400).send({ message: 'Missing manufacturer, product, or package information' });
     }
 
-    const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
+    const { manufacturerName, manufacturedDate, expiryDate, batchNumber, nafdacRegistration } = manufacturerInformation;
+    const { productName, productCategory, productDescription } = productInformation;
+    const { productsPerPackage, howManyPackage, currentHumidity, currentTemperature, productComponent } = packageInformation;
 
+    if (!manufacturerName || !manufacturedDate || !expiryDate || !batchNumber || !nafdacRegistration) {
+      return res.status(400).send({ message: 'Missing required manufacturer information' });
+    }
+    if (!productName || !productCategory || !productDescription) {
+      return res.status(400).send({ message: 'Missing required product information' });
+    }
+    if (!productsPerPackage || !howManyPackage || !currentHumidity || !currentTemperature || !productComponent) {
+      return res.status(400).send({ message: 'Missing required package information' });
+    }
+
+    const totalProducts = productsPerPackage * howManyPackage;
     const productCodes = [];
+
     for (let i = 0; i < totalProducts; i++) {
       const uniqueCode = crypto.randomBytes(8).toString('hex');
       productCodes.push(uniqueCode);
     }
+
     packageInformation.productCodes = productCodes;
 
     const newProduct = new Product({
@@ -39,13 +53,11 @@ exports.createProduct = async (req, res) => {
 
     await newProduct.save();
 
-    // Ensure the PDFs directory exists
     const pdfDirectory = path.join(__dirname, '../public/pdfs');
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true });
     }
 
-    // Generate PDF with the unique codes
     const pdfFilename = `${newProduct._id}_codes.pdf`;
     const pdfPath = path.join(pdfDirectory, pdfFilename);
     const doc = new PDFDocument();
@@ -60,15 +72,14 @@ exports.createProduct = async (req, res) => {
 
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
-    // Return a relative path for the PDF to the client
-    res.status(201).send({ 
-      message: 'Product created successfully', 
-      blockchainAddress, 
-      pdfPath: `pdfs/${pdfFilename}` 
+    res.status(201).send({
+      message: 'Product created successfully',
+      blockchainAddress,
+      pdfPath: `pdfs/${pdfFilename}`
     });
   } catch (error) {
     console.error('Error creating product:', error);
-    res.status(400).send({ message: 'Failed to create product', error: error.message });
+    res.status(500).send({ message: 'Failed to create product', error: error.message });
   }
 };
 
