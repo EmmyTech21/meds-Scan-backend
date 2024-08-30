@@ -4,10 +4,10 @@ const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 // Register new user (Public Route)
-router.post("/register", authController.register);
+router.post("/register",  authMiddleware,authController.register);
 
 // Login user (Public Route)
-router.post("/login", authController.login);
+router.post("/login", authMiddleware, authController.login);
 
 // Get user profile (Authenticated Route)
 router.get("/profile", authMiddleware, authController.getProfile);
