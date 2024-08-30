@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
-const pdf = require('pdfkit'); // Assuming you are using pdfkit for PDF generation
+const pdf = require('pdfkit'); 
 
 const productRoutes = require('./routes/productsRoutes');
 const reportRoutes = require('./routes/reportRoutes');

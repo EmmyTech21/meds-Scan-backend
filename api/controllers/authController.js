@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const KYC = require("../models/kycModel");
 const jwt = require("jsonwebtoken");
 
 const generateToken = (userId) => {
@@ -15,6 +16,7 @@ exports.register = async (req, res) => {
       password,
       agreeToTerms,
       role,
+      ...kycData // Extract KYC data separately
     } = req.body;
 
     // Check if the user already exists
@@ -35,6 +37,15 @@ exports.register = async (req, res) => {
 
     // Save the user
     await newUser.save();
+
+    // If role requires KYC data, create KYC entry
+    if (role !== "user") {
+      const kyc = new KYC({
+        userId: newUser._id,
+        ...kycData
+      });
+      await kyc.save();
+    }
 
     // Generate a JWT token
     const token = generateToken(newUser._id);
@@ -62,15 +73,12 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res
-      .status(200)
-      .json({ token, userId: user._id, message: "Login successful" });
+    res.status(200).json({ token, userId: user._id, message: "Login successful" });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ message: "Failed to login", error: error.message });
   }
 };
-
 
 // Get user profile
 exports.getProfile = async (req, res) => {
@@ -79,7 +87,10 @@ exports.getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json(user);
+
+    const kyc = await KYC.findOne({ userId: user._id });
+
+    res.status(200).json({ user, kyc });
   } catch (error) {
     console.error("Error fetching profile:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -89,33 +100,12 @@ exports.getProfile = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const {
-      fullName,
-      email,
-      country,
-      role,
-      businessName,
-      businessLocation,
-      businessRegistrationNumber,
-      taxIdentificationNumber,
-      govtIdImage,
-      cacCertImage,
-    } = req.body;
+    const { fullName, email, role, ...kycData } = req.body;
 
+    // Update the user
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,
-      {
-        fullName,
-        email,
-        country,
-        role,
-        businessName,
-        businessLocation,
-        businessRegistrationNumber,
-        taxIdentificationNumber,
-        govtIdImage,
-        cacCertImage,
-      },
+      { fullName, email, role },
       { new: true }
     ).select("-password");
 
@@ -123,7 +113,16 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json(updatedUser);
+    // Update KYC if needed
+    if (role !== "user") {
+      const updatedKYC = await KYC.findOneAndUpdate(
+        { userId: req.user.userId },
+        kycData,
+        { new: true, upsert: true }
+      );
+    }
+
+    res.status(200).json({ message: "Profile updated successfully", updatedUser });
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -139,7 +138,10 @@ exports.deleteProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ message: "User deleted successfully" });
+    // Delete associated KYC data
+    await KYC.findOneAndDelete({ userId: req.user.userId });
+
+    res.status(200).json({ message: "User and KYC data deleted successfully" });
   } catch (error) {
     console.error("Error deleting profile:", error);
     res.status(500).json({ message: "Server error", error: error.message });
