@@ -15,7 +15,6 @@ const productSchema = new mongoose.Schema({
   productName: String,
   productCategory: String,
   productDescription: String,
-  issn: Number,
 });
 
 const packageSchema = new mongoose.Schema({
