@@ -7,7 +7,7 @@ const manufacturerSchema = new mongoose.Schema({
   phoneNumber: String,
   manufacturedDate: Date,  
   expiryDate: Date,
-  batchNumber: String,
+  // batchNumber: String,
   nafdacRegistration: String,
 });
 

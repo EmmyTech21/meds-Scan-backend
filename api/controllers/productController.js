@@ -15,33 +15,28 @@ exports.createProduct = async (req, res) => {
 
     const { manufacturerInformation, productInformation, packageInformation } = req.body;
 
-    // Validate required fields
-    if (!manufacturerInformation || !productInformation || !packageInformation) {
-      return res.status(400).send({ message: 'Missing manufacturer, product, or package information' });
+    if (!productInformation.productName || !productInformation.productCategory || !productInformation.productDescription) {
+      console.error('Missing required product fields');
+      return res.status(400).send({ message: 'Missing required product fields' });
     }
 
-    const { manufacturerName, manufacturedDate, expiryDate, batchNumber, nafdacRegistration } = manufacturerInformation;
-    const { productName, productCategory, productDescription } = productInformation;
-    const { productsPerPackage, howManyPackage, currentHumidity, currentTemperature, productComponent } = packageInformation;
-
-    if (!manufacturerName || !manufacturedDate || !expiryDate || !batchNumber || !nafdacRegistration) {
-      return res.status(400).send({ message: 'Missing required manufacturer information' });
-    }
-    if (!productName || !productCategory || !productDescription) {
-      return res.status(400).send({ message: 'Missing required product information' });
-    }
-    if (!productsPerPackage || !howManyPackage || !currentHumidity || !currentTemperature || !productComponent) {
-      return res.status(400).send({ message: 'Missing required package information' });
+    if (!manufacturerInformation.manufacturerName || !manufacturerInformation.manufacturedDate || !manufacturerInformation.expiryDate || !manufacturerInformation.nafdacRegistration) {
+      console.error('Missing required manufacturer fields');
+      return res.status(400).send({ message: 'Missing required manufacturer fields' });
     }
 
-    const totalProducts = productsPerPackage * howManyPackage;
+    if (!packageInformation.howManyPackage || !packageInformation.productsPerPackage || !packageInformation.currentHumidity || !packageInformation.currentTemperature || !packageInformation.productComponent) {
+      console.error('Missing required package fields');
+      return res.status(400).send({ message: 'Missing required package fields' });
+    }
+
+    const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
+
     const productCodes = [];
-
     for (let i = 0; i < totalProducts; i++) {
       const uniqueCode = crypto.randomBytes(8).toString('hex');
       productCodes.push(uniqueCode);
     }
-
     packageInformation.productCodes = productCodes;
 
     const newProduct = new Product({
@@ -53,7 +48,6 @@ exports.createProduct = async (req, res) => {
 
     await newProduct.save();
 
-    // PDF Directory and Path
     const pdfDirectory = path.join(__dirname, '../public/pdfs');
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true });
@@ -61,26 +55,26 @@ exports.createProduct = async (req, res) => {
 
     const pdfFilename = `${newProduct._id}_codes.pdf`;
     const pdfPath = path.join(pdfDirectory, pdfFilename);
-
-    // Generate PDF
     const doc = new PDFDocument();
     doc.pipe(fs.createWriteStream(pdfPath));
+
     doc.fontSize(12).text('Product Codes:', { underline: true });
     productCodes.forEach((code, index) => {
       doc.text(`${index + 1}. ${code}`);
     });
+
     doc.end();
 
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
-    res.status(201).send({
-      message: 'Product created successfully',
-      blockchainAddress,
-      pdfPath: `pdfs/${pdfFilename}`  // Correct path relative to 'public'
+    res.status(201).send({ 
+      message: 'Product created successfully', 
+      blockchainAddress, 
+      pdfPath: `pdfs/${pdfFilename}` 
     });
   } catch (error) {
     console.error('Error creating product:', error);
-    res.status(500).send({ message: 'Failed to create product', error: error.message });
+    res.status(400).send({ message: 'Failed to create product', error: error.message });
   }
 };
 
