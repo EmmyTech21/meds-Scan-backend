@@ -22,7 +22,11 @@ exports.register = async (req, res) => {
     // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      if (existingUser.role !== role) {
+        return res.status(400).json({ message: "User already exists with a different role" });
+      } else {
+        return res.status(400).json({ message: "User already exists" });
+      }
     }
 
     // Create a new user
@@ -40,7 +44,6 @@ exports.register = async (req, res) => {
 
     // If role requires KYC data, create KYC entry
     if (role !== "user" && Object.keys(kycData).length > 0) {
-      // Only include KYC data if it's provided
       const kyc = new KYC({
         userId: newUser._id,
         ...kycData
@@ -59,28 +62,39 @@ exports.register = async (req, res) => {
 };
 
 
+
 // Login user
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
+
+    // Find the user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "User not found" });
     }
 
+    // Check if the role matches
+    if (user.role !== role) {
+      return res.status(400).json({ message: "Incorrect role for this email" });
+    }
+
+    // Compare password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // Generate token
     const token = generateToken(user._id);
 
-    res.status(200).json({ token, userId: user._id, message: "Login successful" });
+    res.status(200).json({ userId: user._id, token });
   } catch (error) {
     console.error("Error during login:", error);
-    res.status(500).json({ message: "Failed to login", error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Get user profile
 exports.getProfile = async (req, res) => {
