@@ -32,8 +32,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["manufacturer", "distributors", "stores", "consumers"],
-    default: "distributors",
+    enum: ["Manufacturer", "Distributors", "Stores", "Consumers"],
+    default: "Distributors",
   },
 }, {
   timestamps: true, // Automatically handles createdAt and updatedAt fields
