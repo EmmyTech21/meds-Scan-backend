@@ -97,9 +97,16 @@ exports.getProductByUniqueCode = async (req, res) => {
   // Extract uniqueCode from the request query
   const { uniqueCode } = req.query;
 
-  // Validate the uniqueCode parameter
+  // Ensure user is logged in
+  const userId = req.user?.id;
+
+  // Validate input parameters
   if (!uniqueCode) {
     return res.status(400).send({ message: 'Unique code is required' });
+  }
+
+  if (!userId) {
+    return res.status(401).send({ message: 'User is not authenticated' });
   }
 
   try {
