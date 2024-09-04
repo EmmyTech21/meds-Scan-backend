@@ -94,30 +94,21 @@ exports.getAllProducts = async (req, res) => {
 };
 
 exports.getProductByUniqueCode = async (req, res) => {
-  // Extract uniqueCode and userId from request
+  // Extract uniqueCode from the request query
   const { uniqueCode } = req.query;
-  const userId = req.user?.id || req.query.userId;
 
-  // Validate input parameters
+  // Validate the uniqueCode parameter
   if (!uniqueCode) {
     return res.status(400).send({ message: 'Unique code is required' });
   }
 
-  if (!userId) {
-    return res.status(400).send({ message: 'User ID is required' });
-  }
-
   try {
-    // console.log(`Fetching product with uniqueCode: ${uniqueCode} and userId: ${userId}`);
-
     // Search for the product where the productCode matches the uniqueCode provided
     const product = await Product.findOne({
       'packageInformation.productCodes': uniqueCode,
-      userId,
     });
 
     if (product) {
-      // console.log('Product found:', product);
       return res.status(200).json(product);
     } else {
       console.log('Product not found for uniqueCode:', uniqueCode);
@@ -128,6 +119,7 @@ exports.getProductByUniqueCode = async (req, res) => {
     return res.status(500).send({ message: 'Failed to fetch product', error: error.message });
   }
 };
+
 
 
 exports.updateProduct = async (req, res) => {
