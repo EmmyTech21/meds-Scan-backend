@@ -16,22 +16,20 @@ exports.createProduct = async (req, res) => {
     const { manufacturerInformation, productInformation, packageInformation } = req.body;
 
     if (!productInformation.productName || !productInformation.productCategory || !productInformation.productDescription) {
-      console.error('Missing required product fields');
       return res.status(400).send({ message: 'Missing required product fields' });
     }
 
     if (!manufacturerInformation.manufacturerName || !manufacturerInformation.manufacturedDate || !manufacturerInformation.expiryDate || !manufacturerInformation.nafdacRegistration) {
-      console.error('Missing required manufacturer fields');
       return res.status(400).send({ message: 'Missing required manufacturer fields' });
     }
 
     if (!packageInformation.howManyPackage || !packageInformation.productsPerPackage || !packageInformation.currentHumidity || !packageInformation.currentTemperature || !packageInformation.productComponent) {
-      console.error('Missing required package fields');
       return res.status(400).send({ message: 'Missing required package fields' });
     }
 
     const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
 
+    // Generate unique product codes
     const productCodes = [];
     for (let i = 0; i < totalProducts; i++) {
       const uniqueCode = crypto.randomBytes(8).toString('hex');
@@ -39,42 +37,43 @@ exports.createProduct = async (req, res) => {
     }
     packageInformation.productCodes = productCodes;
 
+    // Save the new product
     const newProduct = new Product({
       manufacturerInformation,
       productInformation,
       packageInformation,
       userId,
     });
-
     await newProduct.save();
 
-    const pdfDirectory = path.join(__dirname, '../public/pdfs');
+    // Create PDF
+    const pdfDirectory = path.join(__dirname, "../public/pdfs");
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true });
     }
-
+    
     const pdfFilename = `${newProduct._id}_codes.pdf`;
     const pdfPath = path.join(pdfDirectory, pdfFilename);
+
     const doc = new PDFDocument();
     doc.pipe(fs.createWriteStream(pdfPath));
-
     doc.fontSize(12).text('Product Codes:', { underline: true });
     productCodes.forEach((code, index) => {
       doc.text(`${index + 1}. ${code}`);
     });
-
     doc.end();
 
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
-    res.status(201).send({ 
+    res.status(201).json({ 
       message: 'Product created successfully', 
-      blockchainAddress, 
-      pdfPath: `pdfs/${pdfFilename}` 
+      pdfUrl: `/pdfs/${pdfFilename}`,
+      blockchainAddress
     });
+
   } catch (error) {
     console.error('Error creating product:', error);
-    res.status(400).send({ message: 'Failed to create product', error: error.message });
+    res.status(500).send({ message: 'Failed to create product', error: error.message });
   }
 };
 
