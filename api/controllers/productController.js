@@ -3,7 +3,6 @@ const crypto = require("crypto");
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
-const QRCode = require("qrcode");
 
 exports.createProduct = async (req, res) => {
   try {
@@ -74,16 +73,12 @@ exports.createProduct = async (req, res) => {
 
     const doc = new PDFDocument();
     doc.pipe(fs.createWriteStream(pdfPath));
-    doc.fontSize(16).text("Product Codes with QR Codes:", { underline: true });
+    doc.fontSize(16).text("Product Codes:", { underline: true });
     doc.moveDown();
 
-    // Generate QR codes and embed them into the PDF
+    // Add product codes to the PDF
     for (const [index, code] of productCodes.entries()) {
-      const qrCodePath = path.join(pdfDirectory, `qr_${code}.png`);
-      await QRCode.toFile(qrCodePath, code, { width: 100 });
-
-      doc.image(qrCodePath, { width: 100 }).moveDown().text(`${index + 1}. ${code}`);
-      fs.unlinkSync(qrCodePath);
+      doc.text(`${index + 1}. ${code}`);
     }
 
     doc.end();
@@ -100,7 +95,6 @@ exports.createProduct = async (req, res) => {
     res.status(500).send({ message: "Failed to create product", error: error.message });
   }
 };
-
 
 exports.getAllProducts = async (req, res) => {
   const userId = req.user?.id || req.query.userId;
@@ -146,9 +140,6 @@ exports.getProductByUniqueCode = async (req, res) => {
   }
 };
 
-
-
-
 exports.updateProduct = async (req, res) => {
   const productId = req.params.id;
   const { productName, productCategory, productDescription, issn } = req.body;
@@ -175,7 +166,6 @@ exports.updateProduct = async (req, res) => {
 
     res.status(200).send({ message: 'Product updated successfully' });
   } catch (error) {
-    // console.error('Error updating product:', error);
     res.status(400).send({ message: 'Failed to update product', error: error.message });
   }
 };
