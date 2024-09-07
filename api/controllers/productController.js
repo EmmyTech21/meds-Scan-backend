@@ -4,38 +4,49 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
+
 exports.createProduct = async (req, res) => {
   try {
     const userId = req.user?.id || req.body.userId;
 
     if (!userId) {
-      console.error('User ID is missing');
-      return res.status(400).send({ message: 'User ID is missing' });
+      console.error("User ID is missing");
+      return res.status(400).send({ message: "User ID is missing" });
     }
 
     const { manufacturerInformation, productInformation, packageInformation } = req.body;
 
-    if (!productInformation.productName || !productInformation.productCategory || !productInformation.productDescription) {
-      return res.status(400).send({ message: 'Missing required product fields' });
+    if (
+      !productInformation?.productName ||
+      !productInformation?.productCategory ||
+      !productInformation?.productDescription
+    ) {
+      return res.status(400).send({ message: "Missing required product fields" });
     }
 
-    if (!manufacturerInformation.manufacturerName || !manufacturerInformation.manufacturedDate || !manufacturerInformation.expiryDate || !manufacturerInformation.nafdacRegistration) {
-      return res.status(400).send({ message: 'Missing required manufacturer fields' });
+    if (
+      !manufacturerInformation?.manufacturerName ||
+      !manufacturerInformation?.manufacturedDate ||
+      !manufacturerInformation?.expiryDate ||
+      !manufacturerInformation?.nafdacRegistration
+    ) {
+      return res.status(400).send({ message: "Missing required manufacturer fields" });
     }
 
-    if (!packageInformation.howManyPackage || !packageInformation.productsPerPackage || !packageInformation.currentHumidity || !packageInformation.currentTemperature || !packageInformation.productComponent) {
-      return res.status(400).send({ message: 'Missing required package fields' });
+    if (
+      !packageInformation?.howManyPackage ||
+      !packageInformation?.productsPerPackage ||
+      !packageInformation?.currentHumidity ||
+      !packageInformation?.currentTemperature ||
+      !packageInformation?.productComponent
+    ) {
+      return res.status(400).send({ message: "Missing required package fields" });
     }
 
-  const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
+    const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
 
     // Generate unique product codes
-    const productCodes = [];
-    for (let i = 0; i < totalProducts; i++) {
-      
-      const uniqueCode = crypto.randomBytes(8).toString('hex');
-      productCodes.push(uniqueCode);
-    }
+    const productCodes = Array.from({ length: totalProducts }, () => crypto.randomBytes(8).toString("hex"));
     packageInformation.productCodes = productCodes;
 
     // Save the new product
@@ -47,34 +58,46 @@ exports.createProduct = async (req, res) => {
     });
     await newProduct.save();
 
-    // Create PDF
+    // Create PDF directory if it doesn't exist
     const pdfDirectory = path.join(__dirname, "../public/pdfs");
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true });
     }
-    
+
     const pdfFilename = `${newProduct._id}_codes.pdf`;
     const pdfPath = path.join(pdfDirectory, pdfFilename);
 
     const doc = new PDFDocument();
     doc.pipe(fs.createWriteStream(pdfPath));
-    doc.fontSize(12).text('Product Codes:', { underline: true });
-    productCodes.forEach((code, index) => {
-      doc.text(`${index + 1}. ${code}`);
-    });
+    doc.fontSize(16).text("Product Codes with QR Codes:", { underline: true });
+    doc.moveDown();
+
+    // Generate QR codes and embed them into the PDF
+    for (const [index, code] of productCodes.entries()) {
+      // Generate QR code image
+      const qrCodePath = path.join(pdfDirectory, `qr_${code}.png`);
+      await QRCode.toFile(qrCodePath, code, { width: 100 });
+
+      // Add QR code and the unique code text to the PDF
+      doc.image(qrCodePath, { width: 100 }).moveUp().text(`${index + 1}. ${code}`, { continued: true });
+
+      // Remove the QR code image file after embedding it in the PDF
+      fs.unlinkSync(qrCodePath);
+    }
+
     doc.end();
 
+    // Generate a mock blockchain address for demonstration purposes
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
-    res.status(201).json({ 
-      message: 'Product created successfully', 
+    res.status(201).json({
+      message: "Product created successfully",
       pdfUrl: `/pdfs/${pdfFilename}`,
-      blockchainAddress
+      blockchainAddress,
     });
-
   } catch (error) {
-    console.error('Error creating product:', error);
-    res.status(500).send({ message: 'Failed to create product', error: error.message });
+    console.error("Error creating product:", error);
+    res.status(500).send({ message: "Failed to create product", error: error.message });
   }
 };
 
