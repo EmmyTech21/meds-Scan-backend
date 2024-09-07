@@ -1,9 +1,9 @@
-const Product = require('../models/productsModel');
-const crypto = require('crypto');
-const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
-
+const Product = require("../models/productsModel");
+const crypto = require("crypto");
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
+const QRCode = require("qrcode");
 
 exports.createProduct = async (req, res) => {
   try {
@@ -17,36 +17,41 @@ exports.createProduct = async (req, res) => {
     const { manufacturerInformation, productInformation, packageInformation } = req.body;
 
     if (
-      !productInformation?.productName ||
-      !productInformation?.productCategory ||
-      !productInformation?.productDescription
+      !productInformation.productName ||
+      !productInformation.productCategory ||
+      !productInformation.productDescription
     ) {
       return res.status(400).send({ message: "Missing required product fields" });
     }
 
     if (
-      !manufacturerInformation?.manufacturerName ||
-      !manufacturerInformation?.manufacturedDate ||
-      !manufacturerInformation?.expiryDate ||
-      !manufacturerInformation?.nafdacRegistration
+      !manufacturerInformation.manufacturerName ||
+      !manufacturerInformation.manufacturedDate ||
+      !manufacturerInformation.expiryDate ||
+      !manufacturerInformation.nafdacRegistration
     ) {
       return res.status(400).send({ message: "Missing required manufacturer fields" });
     }
 
     if (
-      !packageInformation?.howManyPackage ||
-      !packageInformation?.productsPerPackage ||
-      !packageInformation?.currentHumidity ||
-      !packageInformation?.currentTemperature ||
-      !packageInformation?.productComponent
+      !packageInformation.howManyPackage ||
+      !packageInformation.productsPerPackage ||
+      !packageInformation.currentHumidity ||
+      !packageInformation.currentTemperature ||
+      !packageInformation.productComponent
     ) {
       return res.status(400).send({ message: "Missing required package fields" });
     }
 
-    const totalProducts = packageInformation.productsPerPackage * packageInformation.howManyPackage;
+    const totalProducts =
+      packageInformation.productsPerPackage * packageInformation.howManyPackage;
 
     // Generate unique product codes
-    const productCodes = Array.from({ length: totalProducts }, () => crypto.randomBytes(8).toString("hex"));
+    const productCodes = [];
+    for (let i = 0; i < totalProducts; i++) {
+      const uniqueCode = crypto.randomBytes(8).toString("hex");
+      productCodes.push(uniqueCode);
+    }
     packageInformation.productCodes = productCodes;
 
     // Save the new product
@@ -74,20 +79,15 @@ exports.createProduct = async (req, res) => {
 
     // Generate QR codes and embed them into the PDF
     for (const [index, code] of productCodes.entries()) {
-      // Generate QR code image
       const qrCodePath = path.join(pdfDirectory, `qr_${code}.png`);
       await QRCode.toFile(qrCodePath, code, { width: 100 });
 
-      // Add QR code and the unique code text to the PDF
-      doc.image(qrCodePath, { width: 100 }).moveUp().text(`${index + 1}. ${code}`, { continued: true });
-
-      // Remove the QR code image file after embedding it in the PDF
+      doc.image(qrCodePath, { width: 100 }).moveDown().text(`${index + 1}. ${code}`);
       fs.unlinkSync(qrCodePath);
     }
 
     doc.end();
 
-    // Generate a mock blockchain address for demonstration purposes
     const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
     res.status(201).json({
