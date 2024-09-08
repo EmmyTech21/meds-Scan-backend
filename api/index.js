@@ -2,9 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 const productRoutes = require('./routes/productsRoutes');
 const reportRoutes = require('./routes/reportRoutes');
@@ -19,7 +19,7 @@ const app = express();
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 app.use(cors({ 
-  origin: ['http://localhost:5173', 'https://meds-scan-backend.vercel.app/'], 
+  origin: ['http://localhost:5173', 'https://meds-scan-backend.vercel.app'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   allowedHeaders: ['Content-Type', 'Authorization'] 
 }));

@@ -63,7 +63,7 @@ exports.createProduct = async (req, res) => {
     await newProduct.save();
 
     // Create PDF directory if it doesn't exist
-    const pdfDirectory = path.join(__dirname, "../public/pdfs");
+    const pdfDirectory = path.join(__dirname, '../../public/pdfs');
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true });
     }
@@ -95,7 +95,6 @@ exports.createProduct = async (req, res) => {
     res.status(500).send({ message: "Failed to create product", error: error.message });
   }
 };
-
 exports.getAllProducts = async (req, res) => {
   const userId = req.user?.id || req.query.userId;
   if (!userId) {
