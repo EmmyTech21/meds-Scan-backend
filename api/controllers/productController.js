@@ -1,8 +1,24 @@
-const Product = require("../models/productsModel");
-const crypto = require("crypto");
-const PDFDocument = require("pdfkit");
-const fs = require("fs");
-const path = require("path");
+// productController.js
+const Product = require('../models/productsModel');
+const mongoose = require('mongoose');
+const { MongoClient, GridFSBucket } = require('mongodb');
+const PDFDocument = require('pdfkit');
+const crypto = require('crypto');
+require('dotenv').config();
+
+const uri = process.env.DATABASE;
+const client = new MongoClient(uri);
+let bucket;
+
+client.connect(err => {
+  if (err) {
+    console.error('Failed to connect to MongoDB', err);
+    process.exit(1);
+  }
+  const db = client.db('test'); 
+  bucket = new GridFSBucket(db, { bucketName: 'pdfs' });
+  console.log('Connected to MongoDB and GridFS bucket initialized');
+});
 
 exports.createProduct = async (req, res) => {
   try {
@@ -62,17 +78,30 @@ exports.createProduct = async (req, res) => {
     });
     await newProduct.save();
 
-    // Create PDF directory if it doesn't exist
-    const pdfDirectory = path.join(__dirname, '../../public/pdfs');
-    if (!fs.existsSync(pdfDirectory)) {
-      fs.mkdirSync(pdfDirectory, { recursive: true });
-    }
-
-    const pdfFilename = `${newProduct._id}_codes.pdf`;
-    const pdfPath = path.join(pdfDirectory, pdfFilename);
-
+    // Create PDF
     const doc = new PDFDocument();
-    doc.pipe(fs.createWriteStream(pdfPath));
+    const pdfBuffer = [];
+
+    doc.on('data', pdfBuffer.push.bind(pdfBuffer));
+    doc.on('end', async () => {
+      const pdfContent = Buffer.concat(pdfBuffer);
+
+      // Upload PDF to GridFS
+      const uploadStream = bucket.openUploadStream(`${newProduct._id}_codes.pdf`);
+      uploadStream.end(pdfContent);
+
+      // Generate the download URL
+      const pdfUrl = `/pdfs/${uploadStream.id}`;
+
+      const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
+
+      res.status(201).json({
+        message: "Product created successfully",
+        pdfUrl,
+        blockchainAddress,
+      });
+    });
+
     doc.fontSize(16).text("Product Codes:", { underline: true });
     doc.moveDown();
 
@@ -82,19 +111,13 @@ exports.createProduct = async (req, res) => {
     }
 
     doc.end();
-
-    const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
-
-    res.status(201).json({
-      message: "Product created successfully",
-      pdfUrl: `/pdfs/${pdfFilename}`,
-      blockchainAddress,
-    });
   } catch (error) {
     console.error("Error creating product:", error);
     res.status(500).send({ message: "Failed to create product", error: error.message });
   }
 };
+
+
 exports.getAllProducts = async (req, res) => {
   const userId = req.user?.id || req.query.userId;
   if (!userId) {

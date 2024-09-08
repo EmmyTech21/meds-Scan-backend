@@ -3,8 +3,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
-const fs = require('fs');
 const http = require('http');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const productRoutes = require('./routes/productsRoutes');
 const reportRoutes = require('./routes/reportRoutes');
@@ -16,8 +16,7 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-
+// Middleware
 app.use(cors({ 
   origin: ['http://localhost:5173', 'https://meds-scan-backend.vercel.app'], 
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
@@ -27,6 +26,7 @@ app.use(cors({
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
+// Connect to MongoDB
 mongoose.connect(process.env.DATABASE)
   .then(() => console.log('MongoDB connected'))
   .catch((err) => {
@@ -34,12 +34,11 @@ mongoose.connect(process.env.DATABASE)
     process.exit(1);
   });
 
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-  res.send('API is working');
-});
-
+// Routes
+app.get('/', (req, res) => res.send('API is working'));
 app.use('/api/products', productRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/auth', authRoutes);
@@ -47,6 +46,25 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/manufacturer', manufacturerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+
+// Serve PDF files from GridFS
+app.get('/pdfs/:fileId', (req, res) => {
+  const fileId = new mongoose.Types.ObjectId(req.params.fileId);
+  const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
+  const downloadStream = bucket.openDownloadStream(fileId);
+
+  downloadStream.on('data', (chunk) => {
+    res.write(chunk);
+  });
+
+  downloadStream.on('end', () => {
+    res.end();
+  });
+
+  downloadStream.on('error', (err) => {
+    res.status(500).send({ message: 'Error retrieving PDF', error: err.message });
+  });
+});
 
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
