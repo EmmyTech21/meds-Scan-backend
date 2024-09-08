@@ -1,4 +1,3 @@
-
 const Product = require('../models/productsModel');
 const mongoose = require('mongoose');
 const { MongoClient, GridFSBucket } = require('mongodb');
@@ -10,13 +9,20 @@ const uri = process.env.DATABASE;
 const client = new MongoClient(uri);
 let bucket;
 
-// Ensure the bucket is initialized properly
+// Initialize MongoDB and GridFSBucket
 async function initializeBucket() {
   if (!bucket) {
-    await client.connect();
-    const db = client.db('test'); 
-    bucket = new GridFSBucket(db, { bucketName: 'pdfs' });
-    console.log('Connected to MongoDB and GridFS bucket initialized');
+    try {
+      await client.connect();
+      const db = client.db('test'); // Replace 'test' with your actual database name
+      console.log('MongoDB connected successfully');
+      
+      bucket = new GridFSBucket(db, { bucketName: 'pdfs' });
+      console.log('GridFSBucket initialized successfully');
+    } catch (err) {
+      console.error('Failed to connect to MongoDB or initialize GridFSBucket', err);
+      throw err; // Rethrow to ensure it propagates
+    }
   }
   return bucket;
 }
@@ -81,29 +87,37 @@ exports.createProduct = async (req, res) => {
 
     // Initialize GridFS bucket
     const bucket = await initializeBucket();
+    console.log('GridFSBucket is defined and ready');
 
     // Create PDF
     const doc = new PDFDocument();
     const pdfBuffer = [];
 
-    doc.on('data', pdfBuffer.push.bind(pdfBuffer));
+    doc.on('data', chunk => pdfBuffer.push(chunk));
     doc.on('end', async () => {
       const pdfContent = Buffer.concat(pdfBuffer);
 
-      // Upload PDF to GridFS
-      const uploadStream = bucket.openUploadStream(`${newProduct._id}_codes.pdf`);
-      uploadStream.end(pdfContent);
+      try {
+        // Upload PDF to GridFS
+        const uploadStream = bucket.openUploadStream(`${newProduct._id}_codes.pdf`);
+        uploadStream.end(pdfContent);
+        console.log('PDF uploaded to GridFS successfully');
 
-      // Generate the download URL
-      const pdfUrl = `/pdfs/${uploadStream.id}`;
+        // Generate the download URL
+        const pdfUrl = `/pdfs/${uploadStream.id}`;
+        console.log(`PDF URL generated: ${pdfUrl}`);
 
-      const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
+        const blockchainAddress = `mock-blockchain-address-${newProduct._id}`;
 
-      res.status(201).json({
-        message: "Product created successfully",
-        pdfUrl,
-        blockchainAddress,
-      });
+        res.status(201).json({
+          message: "Product created successfully",
+          pdfUrl,
+          blockchainAddress,
+        });
+      } catch (uploadError) {
+        console.error('Failed to upload PDF to GridFS', uploadError);
+        res.status(500).send({ message: "Failed to upload PDF to GridFS", error: uploadError.message });
+      }
     });
 
     doc.fontSize(16).text("Product Codes:", { underline: true });
@@ -120,6 +134,7 @@ exports.createProduct = async (req, res) => {
     res.status(500).send({ message: "Failed to create product", error: error.message });
   }
 };
+
 
 
 
