@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
 const http = require('http');
+const { GridFSBucket } = require('mongodb');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const productRoutes = require('./routes/productsRoutes');
@@ -28,7 +29,12 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.DATABASE)
-  .then(() => console.log('MongoDB connected'))
+  .then(() => {
+    console.log('MongoDB connected');
+    // Initialize GridFSBucket after MongoDB connection
+    app.locals.bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
+    console.log('GridFSBucket initialized');
+  })
   .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
@@ -50,26 +56,23 @@ app.use('/api/dashboard', dashboardRoutes);
 // Serve PDF files from GridFS
 app.get('/pdfs/:fileId', (req, res) => {
   try {
-    // Convert fileId from string to ObjectId
     const fileId = new mongoose.Types.ObjectId(req.params.fileId);
+    const bucket = app.locals.bucket;
 
-    // Initialize GridFSBucket
-    const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
+    if (!bucket) {
+      throw new Error('GridFSBucket is not initialized');
+    }
 
-    // Create a download stream
     const downloadStream = bucket.openDownloadStream(fileId);
 
-    // Handle data event
     downloadStream.on('data', (chunk) => {
       res.write(chunk);
     });
 
-    // Handle end event
     downloadStream.on('end', () => {
       res.end();
     });
 
-    // Handle error event
     downloadStream.on('error', (err) => {
       console.error('Error retrieving PDF:', err);
       res.status(500).send({ message: 'Error retrieving PDF', error: err.message });
