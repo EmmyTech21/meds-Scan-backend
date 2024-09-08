@@ -1,4 +1,4 @@
-// productController.js
+
 const Product = require('../models/productsModel');
 const mongoose = require('mongoose');
 const { MongoClient, GridFSBucket } = require('mongodb');

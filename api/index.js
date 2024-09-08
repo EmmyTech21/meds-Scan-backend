@@ -49,22 +49,37 @@ app.use('/api/dashboard', dashboardRoutes);
 
 // Serve PDF files from GridFS
 app.get('/pdfs/:fileId', (req, res) => {
-  const fileId = new mongoose.Types.ObjectId(req.params.fileId);
-  const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
-  const downloadStream = bucket.openDownloadStream(fileId);
+  try {
+    // Convert fileId from string to ObjectId
+    const fileId = new mongoose.Types.ObjectId(req.params.fileId);
 
-  downloadStream.on('data', (chunk) => {
-    res.write(chunk);
-  });
+    // Initialize GridFSBucket
+    const bucket = new GridFSBucket(mongoose.connection.db, { bucketName: 'pdfs' });
 
-  downloadStream.on('end', () => {
-    res.end();
-  });
+    // Create a download stream
+    const downloadStream = bucket.openDownloadStream(fileId);
 
-  downloadStream.on('error', (err) => {
-    res.status(500).send({ message: 'Error retrieving PDF', error: err.message });
-  });
+    // Handle data event
+    downloadStream.on('data', (chunk) => {
+      res.write(chunk);
+    });
+
+    // Handle end event
+    downloadStream.on('end', () => {
+      res.end();
+    });
+
+    // Handle error event
+    downloadStream.on('error', (err) => {
+      console.error('Error retrieving PDF:', err);
+      res.status(500).send({ message: 'Error retrieving PDF', error: err.message });
+    });
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(500).send({ message: 'Internal server error', error: error.message });
+  }
 });
+
 
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
