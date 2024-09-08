@@ -10,15 +10,16 @@ const uri = process.env.DATABASE;
 const client = new MongoClient(uri);
 let bucket;
 
-client.connect(err => {
-  if (err) {
-    console.error('Failed to connect to MongoDB', err);
-    process.exit(1);
+// Ensure the bucket is initialized properly
+async function initializeBucket() {
+  if (!bucket) {
+    await client.connect();
+    const db = client.db('test'); 
+    bucket = new GridFSBucket(db, { bucketName: 'pdfs' });
+    console.log('Connected to MongoDB and GridFS bucket initialized');
   }
-  const db = client.db('test'); 
-  bucket = new GridFSBucket(db, { bucketName: 'pdfs' });
-  console.log('Connected to MongoDB and GridFS bucket initialized');
-});
+  return bucket;
+}
 
 exports.createProduct = async (req, res) => {
   try {
@@ -78,6 +79,9 @@ exports.createProduct = async (req, res) => {
     });
     await newProduct.save();
 
+    // Initialize GridFS bucket
+    const bucket = await initializeBucket();
+
     // Create PDF
     const doc = new PDFDocument();
     const pdfBuffer = [];
@@ -116,6 +120,7 @@ exports.createProduct = async (req, res) => {
     res.status(500).send({ message: "Failed to create product", error: error.message });
   }
 };
+
 
 
 exports.getAllProducts = async (req, res) => {
